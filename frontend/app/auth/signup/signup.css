@@ -1,0 +1,78 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-image: url(https://i.pinimg.com/originals/a0/5c/53/a05c534a95aa48c6423f65d34db97996.gif);
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 2rem;
+  box-shadow: 4px 4px 8px rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.signup-card {
+  width: 420px;
+  padding: 45px;
+  border-radius: 16px;
+  background: white;
+  animation: cardEnter 0.8s ease;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: 600;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  transition: all 0.25s ease;
+}
+
+.field:hover {
+  transform: translateY(-2px);
+}
+
+.field:focus-within {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.signup-btn {
+  margin-top: 10px;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  transition: 0.25s;
+}
+
+.signup-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,105 @@
+version: "3.9"
+
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: next_frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:5000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      # - frontend_node_modules:/app/node_modules
+      - next_build:/app/.next
+    # command: npm run dev
+    command: sh -c "npm install && npm run dev"
+    networks:
+      - app_network
+
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nest_backend
+    working_dir: /app
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: demo_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # volumes:
+      # - ./backend:/app
+      # - backend_node_modules:/app/node_modules
+    # command: npm run start:dev
+    command: node dist/main.js
+    networks:
+      - app_network
+
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: demo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+
+  pgcreator:
+    image: dpage/pgcreator4
+    container_name: pgcreator
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGCREATOR_DEFAULT_EMAIL: creator@gmail.com
+      PGCREATOR_DEFAULT_PASSWORD: creator
+    depends_on:
+      - postgres
+    volumes:
+      - pgcreator_data:/var/lib/pgcreator
+    networks:
+      - app_network
+
+
+volumes:
+  postgres_data:
+  pgcreator_data:
+  frontend_node_modules:
+  backend_node_modules:
+  next_build:
+
+
+networks:
+  app_network:
+    driver: bridge

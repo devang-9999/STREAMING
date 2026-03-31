@@ -1,0 +1,30 @@
+.dashboard {
+  background: #f4f5f7;
+  min-height: 100vh;
+}
+
+.column {
+  background: #ebecf0;
+  padding: 12px;
+  border-radius: 10px;
+  width: 240px;
+  min-height: 500px;
+}
+
+.columnTitle {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #172b4d;
+}
+
+.taskCard {
+  margin-bottom: 10px;
+  border-radius: 8px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.taskCard:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
