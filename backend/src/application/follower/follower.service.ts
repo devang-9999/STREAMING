@@ -4,20 +4,20 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserRole } from 'src/common/userRole.enum';
 import { Follow } from 'src/domain/entities/follow.entity';
-import { User, UserRole } from 'src/domain/entities/user.entity';
+import { User } from 'src/domain/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class FollowersService {
   constructor(
     @InjectRepository(Follow)
-    private followRepository: Repository<Follow>,
+    private readonly followRepository: Repository<Follow>,
 
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async followUser(currentUserId: number, targetUserId: number) {
@@ -35,6 +35,10 @@ export class FollowersService {
 
     if (!currentUser || !targetUser) {
       throw new NotFoundException('User not found');
+    }
+
+    if (currentUser.role !== UserRole.USER) {
+      throw new ForbiddenException('Only users can follow creators');
     }
 
     if (targetUser.role !== UserRole.CREATOR) {
@@ -105,17 +109,17 @@ export class FollowersService {
     }));
   }
 
-  async getFollowingCount(userId: number) {
+  async getFollowersCount(userId: number) {
     const count = await this.followRepository.count({
-      where: { follower: { id: userId } },
+      where: { following: { id: userId } },
     });
 
     return { count };
   }
 
-  async getFollowersCount(userId: number) {
+  async getFollowingCount(userId: number) {
     const count = await this.followRepository.count({
-      where: { following: { id: userId } },
+      where: { follower: { id: userId } },
     });
 
     return { count };
@@ -129,8 +133,15 @@ export class FollowersService {
       },
     });
 
-    return {
-      isFollowing: !!follow,
-    };
+    return { isFollowing: !!follow };
+  }
+
+  async getFollowerIds(creatorId: number): Promise<number[]> {
+    const followers = await this.followRepository.find({
+      where: { following: { id: creatorId } },
+      relations: ['follower'],
+    });
+
+    return followers.map((f) => f.follower.id);
   }
 }

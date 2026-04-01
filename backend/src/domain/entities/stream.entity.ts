@@ -41,6 +41,12 @@ export class Stream {
   })
   creator: User;
 
+  @Column({ type: 'timestamp', nullable: true })
+  reminderSentAt: Date;
+
+  @Column({ default: false })
+  reminderSent: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

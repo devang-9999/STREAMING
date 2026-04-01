@@ -42,7 +42,7 @@ export class StreamsController {
     @Body() dto: UpdateStreamStatusDto,
     @Req() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return this.streamsService.updateStreamStatus(id, dto, userId);
   }
 

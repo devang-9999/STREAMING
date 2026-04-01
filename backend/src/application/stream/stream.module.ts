@@ -1,29 +1,30 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Task } from 'src/domain/entities/stream.entity';
-import { ActivityLog } from 'src/domain/entities/activity-log.entity';
+import { StreamsService } from './stream.service';
+import { StreamsController } from './stream.controller';
+import { StreamsGateway } from './stream.gateway';
+
+import { Stream } from 'src/domain/entities/stream.entity';
+import { User } from 'src/domain/entities/user.entity';
+import { Follow } from 'src/domain/entities/follow.entity';
 import { Notification } from 'src/domain/entities/notification.entity';
 
-import { TasksController } from './stream.controller';
-import { TasksService } from './stream.service';
-import { TasksGateway } from './stream.gateway';
-
-import { ActivityLogsService } from '../activity-log/activity-log.service';
-import { NotificationsService } from '../notification/notification.service';
-import { EmailService } from '../email/email.service';
-import { User } from 'src/domain/entities/user.entity';
+import { NotificationsModule } from '../notification/notification.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Task, User, ActivityLog, Notification])],
-  controllers: [TasksController],
-  providers: [
-    TasksService,
-    TasksGateway,
-    ActivityLogsService,
-    NotificationsService,
-    EmailService,
+  imports: [
+    TypeOrmModule.forFeature([Stream, User, Follow, Notification]),
+
+    forwardRef(() => NotificationsModule),
+
+    EmailModule,
   ],
-  exports: [TasksService, TasksGateway],
+  controllers: [StreamsController],
+
+  providers: [StreamsService, StreamsGateway],
+
+  exports: [StreamsService, StreamsGateway],
 })
-export class TasksModule {}
+export class StreamsModule {}

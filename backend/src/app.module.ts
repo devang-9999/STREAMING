@@ -1,31 +1,38 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { dataSourceOptions } from './infrastructure/database/typeorm-config';
 
 import { AuthModule } from './application/auth/auth.module';
 import { EmailModule } from './application/email/email.module';
-import { TasksModule } from './application/stream/stream.module';
-import { ActivityLogsModule } from './application/activity-log/activity-log.module';
 import { NotificationsModule } from './application/notification/notification.module';
-import { SeedModule } from './infrastructure/seeder/seed.module';
 import { UsersModule } from './application/users/users.module';
+import { StreamsModule } from './application/stream/stream.module';
+import { CronModule } from './infrastructure/cron/cron.module';
+import { FollowersModule } from './application/follower/follower.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
-    TypeOrmModule.forRoot(dataSourceOptions),
-    SeedModule,
+    ScheduleModule.forRoot(),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: () => dataSourceOptions,
+    }),
+
     AuthModule,
-    EmailModule,
-    TasksModule,
-    ActivityLogsModule,
-    NotificationsModule,
     UsersModule,
+    StreamsModule,
+    NotificationsModule,
+    EmailModule,
+    CronModule,
+    FollowersModule,
   ],
 })
 export class AppModule {}

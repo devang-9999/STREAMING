@@ -15,6 +15,7 @@ import {
   Snackbar,
   Alert,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -32,7 +33,7 @@ const schema = z
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Password must be 6 characters"),
     confirmPassword: z.string(),
-    role: z.enum(["creator", "user"], { message: "Role required" }),
+    role: z.enum(["CREATOR", "USER"], { message: "Role required" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -53,7 +54,7 @@ export default function SignupPage() {
     "success",
   );
   const [snackbarMessage, setSnackbarMessage] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -63,6 +64,8 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: FormData) => {
+    setLoading(true);
+
     const result = await dispatch(
       signupThunk({
         name: data.name,
@@ -72,13 +75,21 @@ export default function SignupPage() {
       }),
     );
 
+    setLoading(false);
+
     if (signupThunk.fulfilled.match(result)) {
       setSnackbarType("success");
       setSnackbarMessage("Account created successfully");
-      router.push("/user");
+
+      if (data.role === "CREATOR") {
+        router.push("/creator");
+      } else {
+        router.push("/user");
+      }
     } else {
       setSnackbarType("error");
-      setSnackbarMessage("Signup failed");
+
+      setSnackbarMessage((result.payload as string) || "Signup failed");
     }
 
     setOpenSnackbar(true);
@@ -92,7 +103,6 @@ export default function SignupPage() {
           "url(https://i.pinimg.com/originals/a0/5c/53/a05c534a95aa48c6423f65d34db97996.gif)",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -141,13 +151,14 @@ export default function SignupPage() {
             select
             label="Role"
             fullWidth
+            defaultValue="USER"
             {...register("role")}
             error={!!errors.role}
             helperText={errors.role?.message}
             sx={{ mb: 3 }}
           >
-            <MenuItem value="creator">Creator</MenuItem>
-            <MenuItem value="user">User</MenuItem>
+            <MenuItem value="CREATOR">Creator</MenuItem>
+            <MenuItem value="USER">User</MenuItem>
           </TextField>
 
           <TextField
@@ -193,6 +204,7 @@ export default function SignupPage() {
             fullWidth
             size="large"
             type="submit"
+            disabled={loading}
             sx={{
               background: "#0052cc",
               fontWeight: 600,
@@ -202,7 +214,11 @@ export default function SignupPage() {
               },
             }}
           >
-            Sign Up
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Sign Up"
+            )}
           </Button>
 
           <Typography align="center" sx={{ mt: 2 }}>

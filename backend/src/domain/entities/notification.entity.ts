@@ -8,12 +8,17 @@ import {
 import { User } from './user.entity';
 import { Stream } from './stream.entity';
 
+export enum NotificationType {
+  SCHEDULED = 'scheduled',
+  REMINDER = 'reminder',
+}
+
 @Entity()
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.notifications)
   user: User;
 
   @ManyToOne(() => Stream)
@@ -24,6 +29,12 @@ export class Notification {
 
   @Column({ default: false })
   isRead: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: NotificationType,
+  })
+  type: NotificationType;
 
   @CreateDateColumn()
   createdAt: Date;

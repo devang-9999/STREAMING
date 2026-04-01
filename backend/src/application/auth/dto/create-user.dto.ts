@@ -1,10 +1,6 @@
 // users/dto/create-user.dto.ts
 import { IsEmail, IsEnum, IsNotEmpty, MinLength } from 'class-validator';
-
-export enum UserRole {
-  CREATOR = 'creator',
-  USER = 'user',
-}
+import { UserRole } from 'src/common/userRole.enum';
 
 export class CreateUserDto {
   @IsNotEmpty()

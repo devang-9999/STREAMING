@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-empty */
 import {
   Injectable,
   NotFoundException,
@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Stream, StreamStatus } from 'src/domain/entities/stream.entity';
-import { User, UserRole } from 'src/domain/entities/user.entity';
+import { User } from 'src/domain/entities/user.entity';
 import { Follow } from 'src/domain/entities/follow.entity';
 
 import { CreateStreamDto } from './dto/create-stream.dto';
@@ -17,7 +17,9 @@ import { CreateStreamDto } from './dto/create-stream.dto';
 import { NotificationsService } from '../notification/notification.service';
 import { EmailService } from '../email/email.service';
 import { StreamsGateway } from './stream.gateway';
+import { NotificationType } from 'src/domain/entities/notification.entity';
 import { UpdateStreamStatusDto } from './dto/update-stream-status.dto.';
+import { UserRole } from 'src/common/userRole.enum';
 
 @Injectable()
 export class StreamsService {
@@ -54,6 +56,7 @@ export class StreamsService {
       scheduledAt: new Date(dto.scheduledAt),
       creator,
       status: StreamStatus.SCHEDULED,
+      reminderSent: false,
     });
 
     const savedStream = await this.streamRepo.save(stream);
@@ -66,6 +69,7 @@ export class StreamsService {
           userId: follower.id,
           streamId: savedStream.id,
           message: `${creator.name} scheduled a new stream: "${savedStream.title}"`,
+          type: NotificationType.SCHEDULED,
         }),
       ),
     );
@@ -81,9 +85,7 @@ export class StreamsService {
           ),
         ),
       );
-    } catch (error) {
-      console.error(error?.message);
-    }
+    } catch {}
 
     this.streamsGateway.streamCreated(savedStream);
 
@@ -92,6 +94,14 @@ export class StreamsService {
 
   async getAllStreams() {
     return this.streamRepo.find({
+      relations: ['creator'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async getCreatorStreams(creatorId: number) {
+    return this.streamRepo.find({
+      where: { creator: { id: creatorId } },
       relations: ['creator'],
       order: { createdAt: 'DESC' },
     });
@@ -119,18 +129,19 @@ export class StreamsService {
 
     const updatedStream = await this.streamRepo.save(stream);
 
-    if (dto.status === StreamStatus.LIVE) {
-      const followers = await this.followRepo.find({
-        where: { following: { id: stream.creator.id } },
-        relations: ['follower'],
-      });
+    const followers = await this.followRepo.find({
+      where: { following: { id: stream.creator.id } },
+      relations: ['follower'],
+    });
 
+    if (dto.status === StreamStatus.LIVE) {
       await Promise.all(
         followers.map((f) =>
           this.notificationsService.createNotification({
             userId: f.follower.id,
             streamId: stream.id,
             message: `${stream.creator.name} is LIVE now: "${stream.title}"`,
+            type: NotificationType.REMINDER,
           }),
         ),
       );
@@ -145,17 +156,10 @@ export class StreamsService {
             ),
           ),
         );
-      } catch (error) {
-        console.error(error?.message);
-      }
+      } catch {}
     }
 
     if (dto.status === StreamStatus.CANCELLED) {
-      const followers = await this.followRepo.find({
-        where: { following: { id: stream.creator.id } },
-        relations: ['follower'],
-      });
-
       try {
         await Promise.all(
           followers.map((f) =>
@@ -166,17 +170,10 @@ export class StreamsService {
             ),
           ),
         );
-      } catch (error) {
-        console.error(error?.message);
-      }
+      } catch {}
     }
 
     if (dto.status === StreamStatus.COMPLETED) {
-      const followers = await this.followRepo.find({
-        where: { following: { id: stream.creator.id } },
-        relations: ['follower'],
-      });
-
       try {
         await Promise.all(
           followers.map((f) =>
@@ -187,23 +184,11 @@ export class StreamsService {
             ),
           ),
         );
-      } catch (error) {
-        console.error(error?.message);
-      }
+      } catch {}
     }
 
     this.streamsGateway.streamUpdated(updatedStream);
 
     return updatedStream;
-  }
-
-  async getCreatorStreams(creatorId: number) {
-    return this.streamRepo.find({
-      where: {
-        creator: { id: creatorId },
-      },
-      relations: ['creator'],
-      order: { createdAt: 'DESC' },
-    });
   }
 }

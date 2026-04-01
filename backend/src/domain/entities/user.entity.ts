@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,11 +8,8 @@ import {
 } from 'typeorm';
 import { Follow } from './follow.entity';
 import { Stream } from './stream.entity';
-
-export enum UserRole {
-  CREATOR = 'creator',
-  USER = 'user',
-}
+import { Notification } from './notification.entity';
+import { UserRole } from 'src/common/userRole.enum';
 
 @Entity()
 export class User {
@@ -43,6 +39,9 @@ export class User {
 
   @OneToMany(() => Stream, (stream) => stream.creator)
   createdStreams: Stream[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
   @CreateDateColumn()
   createdAt: Date;

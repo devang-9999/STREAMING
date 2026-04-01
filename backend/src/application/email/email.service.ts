@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
@@ -16,7 +17,7 @@ export class EmailService {
     });
   }
 
-  sendStreamScheduledEmail(
+  async sendStreamScheduledEmail(
     userEmail: string,
     userName: string,
     streamTitle: string,
@@ -27,14 +28,35 @@ export class EmailService {
       subject: `New Stream Scheduled: ${streamTitle}`,
       html: `
         <h3>Hello ${userName},</h3>
-        <p>A new stream has been scheduled: <b>${streamTitle}</b>.</p>
+        <p>A new stream has been scheduled:</p>
+        <p><b>${streamTitle}</b></p>
         <p><b>Scheduled At:</b> ${scheduledAt.toLocaleString()}</p>
         <p>Don't miss it!</p>
       `,
     });
   }
 
-  sendStreamLiveEmail(
+  async sendStreamReminderEmail(
+    userEmail: string,
+    userName: string,
+    streamTitle: string,
+    scheduledAt: Date,
+  ) {
+    return this.transporter.sendMail({
+      to: userEmail,
+      subject: `Reminder: ${streamTitle} starts in 15 minutes`,
+      html: `
+        <h3>Hello ${userName},</h3>
+        <p>Your followed creator is going live soon.</p>
+        <p><b>${streamTitle}</b></p>
+        <p><b>Starts At:</b> ${scheduledAt.toLocaleString()}</p>
+        <p><b>Starting in 15 minutes!</b></p>
+        <p>Be ready 🎥</p>
+      `,
+    });
+  }
+
+  async sendStreamLiveEmail(
     userEmail: string,
     userName: string,
     streamTitle: string,
@@ -50,7 +72,7 @@ export class EmailService {
     });
   }
 
-  sendStreamCancelledEmail(
+  async sendStreamCancelledEmail(
     userEmail: string,
     userName: string,
     streamTitle: string,
@@ -66,7 +88,7 @@ export class EmailService {
     });
   }
 
-  sendStreamCompletedEmail(
+  async sendStreamCompletedEmail(
     userEmail: string,
     userName: string,
     streamTitle: string,

@@ -1,12 +1,15 @@
 import { combineReducers } from "@reduxjs/toolkit";
+
 import authReducer from "@/redux/auth/authSlice";
-import tasksReducer from "@/redux/tasks/taskSlice";
-import userTaskReducer from "@/redux/userTasks/userTaskSlice";
+import streamReducer from "@/redux/streams/streamSlice";
+import notificationReducer from "@/redux/notifications/notificationsSlice";
+import followReducer from "@/redux/follow/followSlice";
 
 const rootReducer = combineReducers({
-  authenticator: authReducer,
-  tasks: tasksReducer,
-  userTasks: userTaskReducer,
+  auth: authReducer,
+  streams: streamReducer,
+  notifications: notificationReducer,
+  followers: followReducer,
 });
 
 export default rootReducer;

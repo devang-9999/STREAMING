@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { NotificationType } from 'src/domain/entities/notification.entity';
 
 export class CreateNotificationDto {
   @IsNumber()
@@ -10,4 +11,7 @@ export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @IsEnum(NotificationType)
+  type: NotificationType;
 }

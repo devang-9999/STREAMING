@@ -1,10 +1,9 @@
 export interface User {
-  // id: string | number | readonly string[] | undefined;
-  id?:number;
+  id: number;
   userId: string;
   name: string;
   email: string;
-  role: "creator" | "user";
+  role: "CREATOR" | "USER";
   profilePic?: string | null;
   isOnline?: boolean;
 }
@@ -27,5 +26,5 @@ export interface SignupPayload {
   name: string;
   email: string;
   password: string;
-  role: "creator" | "user";
+  role: "CREATOR" | "USER";
 }

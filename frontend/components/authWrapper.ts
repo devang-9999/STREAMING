@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 export default function AuthWrapper({ children }: any) {
   const router = useRouter();
-  const { currentUser } = useAppSelector((state) => state.authenticator);
+  const { currentUser } = useAppSelector((state) => state.auth);
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function AuthWrapper({ children }: any) {
       return;
     }
 
-    if (currentUser?.role === "creator") {
+    if (currentUser?.role === "CREATOR") {
       router.replace("/creator");
       return;
     }

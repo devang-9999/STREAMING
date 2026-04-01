@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   Controller,
   Get,
-  Param,
   Patch,
-  Post,
-  Body,
+  Param,
+  Req,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { NotificationsService } from './notification.service';
-import { CreateNotificationDto } from './dto/create-notificaton.dto';
 import { JwtAuthGuard } from 'src/infrastructure/jwt/jwt-auth.gaurd';
 
 @Controller('notifications')
@@ -16,18 +17,13 @@ import { JwtAuthGuard } from 'src/infrastructure/jwt/jwt-auth.gaurd';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Post()
-  createNotification(@Body() dto: CreateNotificationDto) {
-    return this.notificationsService.createNotification(dto);
-  }
-
-  @Get(':userId')
-  getUserNotifications(@Param('userId') userId: number) {
-    return this.notificationsService.getUserNotifications(userId);
+  @Get()
+  getMyNotifications(@Req() req) {
+    return this.notificationsService.getUserNotifications(req.user.userId);
   }
 
   @Patch(':id/read')
-  markAsRead(@Param('id') id: number) {
+  markAsRead(@Param('id', ParseIntPipe) id: number) {
     return this.notificationsService.markAsRead(id);
   }
 }

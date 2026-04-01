@@ -1,34 +1,43 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Notification } from 'src/domain/entities/notification.entity';
-import { Stream } from 'src/domain/entities/stream.entity';
 import { Repository } from 'typeorm';
-import { CreateNotificationDto } from './dto/create-notificaton.dto';
+
+import {
+  Notification,
+  NotificationType,
+} from 'src/domain/entities/notification.entity';
+import { Stream } from 'src/domain/entities/stream.entity';
 import { User } from 'src/domain/entities/user.entity';
+
 import { StreamsGateway } from '../stream/stream.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification)
-    private notificationRepo: Repository<Notification>,
+    private readonly notificationRepo: Repository<Notification>,
 
     @InjectRepository(User)
-    private userRepo: Repository<User>,
+    private readonly userRepo: Repository<User>,
 
     @InjectRepository(Stream)
-    private streamRepo: Repository<Stream>,
+    private readonly streamRepo: Repository<Stream>,
 
-    private streamsGateway: StreamsGateway,
+    private readonly streamsGateway: StreamsGateway,
   ) {}
 
-  async createNotification(dto: CreateNotificationDto) {
+  async createNotification(data: {
+    userId: number;
+    streamId: number;
+    message: string;
+    type: NotificationType;
+  }) {
     const user = await this.userRepo.findOne({
-      where: { id: dto.userId },
+      where: { id: data.userId },
     });
 
     const stream = await this.streamRepo.findOne({
-      where: { id: dto.streamId },
+      where: { id: data.streamId },
     });
 
     if (!user) throw new NotFoundException('User not found');
@@ -37,12 +46,13 @@ export class NotificationsService {
     const notification = this.notificationRepo.create({
       user,
       stream,
-      message: dto.message,
+      message: data.message,
+      type: data.type,
     });
 
     const saved = await this.notificationRepo.save(notification);
 
-    this.streamsGateway.sendNotification(dto.userId, saved);
+    this.streamsGateway.sendNotification(data.userId, saved);
 
     return saved;
   }
@@ -60,7 +70,9 @@ export class NotificationsService {
       where: { id: notificationId },
     });
 
-    if (!notification) throw new NotFoundException('Notification not found');
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
 
     notification.isRead = true;
 

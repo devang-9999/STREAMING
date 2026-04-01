@@ -1,28 +1,33 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/login.dto';
+
 import { User } from 'src/domain/entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { LoginDto } from './dto/login.dto';
+import { UserRole } from 'src/common/userRole.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userRepo: Repository<User>,
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: CreateUserDto) {
-    const { email, password, role, name } = signupDto;
+  async signup(dto: CreateUserDto) {
+    const email = dto.email.toLowerCase().trim();
 
-    const existingUser = await this.userRepository.findOne({
+    const existingUser = await this.userRepo.findOne({
       where: { email },
     });
 
@@ -30,49 +35,58 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!Object.values(UserRole).includes(dto.role)) {
+      throw new BadRequestException('Invalid role');
+    }
 
-    const user = this.userRepository.create({
-      name,
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const user = this.userRepo.create({
+      name: dto.name,
       email,
       password: hashedPassword,
-      role,
+      role: dto.role as UserRole,
     });
 
-    await this.userRepository.save(user);
+    await this.userRepo.save(user);
+
+    const { password, ...safeUser } = user;
 
     return {
-      user,
-      message: 'User registered successfully',
+      message: 'Signup successful',
+      user: safeUser,
     };
   }
 
-  async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+  async login(dto: LoginDto) {
+    const email = dto.email.toLowerCase().trim();
 
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({
+      where: { email },
+    });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(dto.password, user.password);
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    const payload = {
-      userId: user.id,
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
       email: user.email,
-    };
+      role: user.role,
+    });
 
-    const token = await this.jwtService.signAsync(payload);
+    const { password, ...safeUser } = user;
 
     return {
-      user,
+      message: 'Login successful',
+      user: safeUser,
       access_token: token,
-      role: user.role,
     };
   }
 }

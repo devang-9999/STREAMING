@@ -6,13 +6,13 @@ import { useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function AdminLayout({
+export default function CreatorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { currentUser } = useAppSelector((state) => state.authenticator);
+  const { currentUser } = useAppSelector((state) => state.auth);
 
   const [authorized, setAuthorized] = useState(false);
 
@@ -24,12 +24,14 @@ export default function AdminLayout({
       return;
     }
 
-    if (currentUser?.role === "user") {
+    if (currentUser && currentUser.role !== "CREATOR") {
       router.replace("/user");
       return;
     }
 
-    setAuthorized(true);
+    if (currentUser?.role === "CREATOR") {
+      setAuthorized(true);
+    }
   }, [currentUser, router]);
 
   if (!authorized) return null;

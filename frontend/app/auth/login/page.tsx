@@ -26,6 +26,8 @@ import { loginThunk } from "@/redux/auth/authThunks";
 import { useAppDispatch } from "@/lib/hooks";
 import Link from "next/link";
 
+
+// ✅ VALIDATION
 const schema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -41,9 +43,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarType, setSnackbarType] = useState<"success" | "error">(
-    "success",
-  );
+  const [snackbarType, setSnackbarType] = useState<"success" | "error">("success");
   const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const {
@@ -61,29 +61,30 @@ export default function LoginPage() {
       loginThunk({
         email: data.email,
         password: data.password,
-      }),
+      })
     );
 
     setLoading(false);
 
     if (loginThunk.fulfilled.match(result)) {
-      const { access_token, user } = result.payload;
-
-      localStorage.removeItem("token");
-
-      localStorage.setItem("token", access_token);
+      const { user } = result.payload;
 
       setSnackbarType("success");
       setSnackbarMessage("Login successful");
 
-      if (user.role === "creator") {
+      // ✅ FIXED ROLE CHECK
+      if (user.role === "CREATOR") {
         router.push("/creator");
       } else {
         router.push("/user");
       }
     } else {
       setSnackbarType("error");
-      setSnackbarMessage("Invalid credentials");
+
+      // ✅ SHOW BACKEND ERROR
+      setSnackbarMessage(
+        (result.payload as string) || "Login failed"
+      );
     }
 
     setOpenSnackbar(true);
@@ -100,7 +101,6 @@ export default function LoginPage() {
           "url(https://i.pinimg.com/originals/a0/5c/53/a05c534a95aa48c6423f65d34db97996.gif)",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
       }}
     >
       <Paper
